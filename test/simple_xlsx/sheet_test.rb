@@ -1,4 +1,4 @@
-require File.join('.', File.dirname(__FILE__), '..', 'test_helper')
+require File.join(File.dirname(__FILE__), '..', 'test_helper')
 require "rexml/document"
 require 'time'
 
@@ -72,7 +72,10 @@ class SheetTest < Test::Unit::TestCase
     assert row
     assert_equal '1', row.attributes['r']
     assert_equal 2, row.elements.to_a.size
-    assert_equal ["r", "s", "t"], row.elements.to_a[0].attributes.keys
+    attribute_keys = row.elements.to_a[0].attributes.keys
+    assert attribute_keys.include?('r')
+    assert attribute_keys.include?('s')
+    assert attribute_keys.include?('t')
   end
 
 

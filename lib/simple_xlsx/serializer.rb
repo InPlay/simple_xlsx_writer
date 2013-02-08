@@ -80,7 +80,7 @@ ends
         f.puts "<Relationship Id=\"#{sheet.rid}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet#{ndx + 1}.xml\"/>"
       end
       if @doc.has_shared_strings?
-        f.puts '<Relationship Id="rId#{cnt += 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="xl/sharedStrings.xml"/>'
+        f.puts "<Relationship Id=\"rId#{cnt += 1}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"xl/sharedStrings.xml\"/>"
       end
       f.puts "</Relationships>"
     end
