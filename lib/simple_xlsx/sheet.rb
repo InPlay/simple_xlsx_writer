@@ -26,7 +26,7 @@ ends
   def add_row arry
     row = ["<row r=\"#{@row_ndx}\">"]
     arry.each_with_index do |value, col_ndx|
-      kind, ccontent, cstyle = Sheet.format_field_and_type_and_style value
+      kind, ccontent, cstyle = format_field_and_type_and_style value
       row << "<c r=\"#{Sheet.column_index(col_ndx)}#{@row_ndx}\" t=\"#{kind.to_s}\" s=\"#{cstyle}\">#{ccontent}</c>"
     end
     row << "</row>"
@@ -34,9 +34,13 @@ ends
     @stream.write(row.join())
   end
 
-  def self.format_field_and_type_and_style value
+  def format_field_and_type_and_style value
     if value.is_a?(String)
-      [:inlineStr, "<is><t>#{value.to_xs}</t></is>", 5]
+      if @document.has_shared_strings?
+        [:s, "<v>#{(@document.shared_strings << value)}</v>", 5] 
+      else
+        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", 5]
+      end
     elsif value.is_a?(BigDecimal)
       [:n, "<v>#{value.to_s('f')}</v>", 4]
     elsif value.is_a?(Float)
@@ -44,9 +48,9 @@ ends
     elsif value.is_a?(Numeric)
       [:n, "<v>#{value.to_s}</v>", 3]
     elsif value.is_a?(Date)
-      [:n, "<v>#{days_since_jan_1_1900(value)}</v>", 2]
+      [:n, "<v>#{Sheet.days_since_jan_1_1900(value)}</v>", 2]
     elsif value.is_a?(Time)
-      [:n, "<v>#{fractional_days_since_jan_1_1900(value)}</v>", 1]
+      [:n, "<v>#{Sheet.fractional_days_since_jan_1_1900(value)}</v>", 1]
     elsif value.is_a?(TrueClass) || value.is_a?(FalseClass)
       [:b, "<v>#{value ? '1' : '0'}</v>", 6]
     else

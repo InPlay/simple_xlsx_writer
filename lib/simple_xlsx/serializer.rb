@@ -2,6 +2,8 @@ module SimpleXlsx
 
 class Serializer
 
+  BUFFER_SIZE = 8192
+
   def initialize to
     @to = to
     Zip::ZipFile.open(to, Zip::ZipFile::CREATE) do |zip|
@@ -12,9 +14,11 @@ class Serializer
       add_styles
       @doc = Document.new(self)
       yield @doc
+      add_shared_strings if @doc.has_shared_strings?
       add_workbook_relationship_part
       add_content_types
       add_workbook_part
+      @doc.close
     end
   end
 
@@ -80,7 +84,7 @@ ends
         f.puts "<Relationship Id=\"#{sheet.rid}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet#{ndx + 1}.xml\"/>"
       end
       if @doc.has_shared_strings?
-        f.puts "<Relationship Id=\"rId#{cnt += 1}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"xl/sharedStrings.xml\"/>"
+        f.puts "<Relationship Id=\"rId#{cnt += 1}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>"
       end
       f.puts "</Relationships>"
     end
@@ -187,6 +191,25 @@ ends
 </cellStyles>
 </styleSheet>
 ends
+    end
+  end
+
+  def add_shared_strings
+    @zip.get_output_stream "xl/sharedStrings.xml" do |f|
+      f.puts <<-ends
+<?xml version="1.0" encoding="UTF-8"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{@doc.shared_strings.count}" uniqueCount="#{@doc.shared_strings.unique_count}">
+ends
+
+      src = @doc.shared_strings_file
+      src.flush
+      src.rewind
+
+      while buff = src.read(BUFFER_SIZE)
+        f.write(buff)
+      end
+      
+      f.puts '</sst>' 
     end
   end
 

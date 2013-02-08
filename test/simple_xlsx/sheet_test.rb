@@ -26,42 +26,70 @@ class SheetTest < Test::Unit::TestCase
     assert_equal 'BC', Sheet.column_index(25+26+3)
   end
 
+  def empty_sheet use_shared_strings = false 
+    sheet_str = ""
+    doc_str = ""
+    io = StringIO.new sheet_str
+    doc_io = StringIO.new doc_str
+
+    doc = Document.new io
+    doc.use_shared_strings = true if use_shared_strings
+    Sheet.new(doc, 'name', io)
+  end
+
   def test_format_field_for_strings
-    v = Sheet.format_field_and_type_and_style "<escape this>"
+    v = empty_sheet.format_field_and_type_and_style "<escape this>"
     assert_equal [:inlineStr, "<is><t>&lt;escape this&gt;</t></is>", 5], v
   end
 
+  def test_format_field_for_shared_strings
+    sheet = empty_sheet true
+
+    v = sheet.format_field_and_type_and_style "frequent string"
+    assert_equal [:s, "<v>0</v>", 5], v
+
+    v = sheet.format_field_and_type_and_style "rare"
+    assert_equal [:s, "<v>1</v>", 5], v
+
+    v = sheet.format_field_and_type_and_style "frequent string"
+    assert_equal [:s, "<v>0</v>", 5], v
+  end
+
   def test_format_field_for_numbers
-    v = Sheet.format_field_and_type_and_style 3
+    v = empty_sheet.format_field_and_type_and_style 3
     assert_equal [:n, "<v>3</v>", 3], v
-    v = Sheet.format_field_and_type_and_style(BigDecimal.new("45"))
+    v = empty_sheet.format_field_and_type_and_style(BigDecimal.new("45"))
     assert_equal [:n, "<v>45.0</v>", 4], v
-    v = Sheet.format_field_and_type_and_style(9.32)
+    v = empty_sheet.format_field_and_type_and_style(9.32)
     assert_equal [:n, "<v>9.32</v>", 4], v
   end
 
   def test_format_field_for_date
-    v = Sheet.format_field_and_type_and_style(Date.parse('2010-Jul-24'))
+    v = empty_sheet.format_field_and_type_and_style(Date.parse('2010-Jul-24'))
     assert_equal [:n, "<v>#{38921+1462}</v>", 2], v
   end
 
   def test_format_field_for_datetime
-    v = Sheet.format_field_and_type_and_style(Time.parse('2010-Jul-24 12:00 UTC'))
+    v = empty_sheet.format_field_and_type_and_style(Time.parse('2010-Jul-24 12:00 UTC'))
     assert_equal [:n, "<v>#{38921.5+1462}</v>", 1], v
   end
 
 
   def test_format_field_for_boolean
-    v = Sheet.format_field_and_type_and_style(false)
+    v = empty_sheet.format_field_and_type_and_style(false)
     assert_equal [:b, "<v>0</v>", 6], v
-    v = Sheet.format_field_and_type_and_style(true)
+    v = empty_sheet.format_field_and_type_and_style(true)
     assert_equal [:b, "<v>1</v>", 6], v
   end
 
   def test_add_row
     str = ""
     io = StringIO.new(str)
-    Sheet.new(nil, 'name', io) do |sheet|
+    doc_str = ""
+    doc_io = StringIO.new doc_str
+    sheet_doc = Document.new io
+
+    Sheet.new(sheet_doc, 'name', io) do |sheet|
       sheet.add_row ['this is ', 'a new row']
     end
     doc = REXML::Document.new str
