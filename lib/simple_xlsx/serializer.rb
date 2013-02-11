@@ -1,8 +1,7 @@
 module SimpleXlsx
 
 class Serializer
-
-  BUFFER_SIZE = 8192
+  include CopyStream
 
   def initialize to
     @to = to
@@ -202,13 +201,7 @@ ends
 ends
 
       src = @doc.shared_strings_file
-      src.flush
-      src.rewind
-
-      while buff = src.read(BUFFER_SIZE)
-        f.write(buff)
-      end
-      
+      copy_stream(src, f)
       f.puts '</sst>' 
     end
   end

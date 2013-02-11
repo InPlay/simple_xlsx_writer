@@ -4,8 +4,11 @@ require 'time'
 module SimpleXlsx
 
 class Sheet
+  include CopyStream
   attr_reader :name
   attr_accessor :rid
+
+  attr_reader :merged_cells
 
   def initialize document, name, stream, &block
     @document = document
@@ -17,10 +20,29 @@ class Sheet
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheetData>
 ends
-    if block_given?
-      yield self
+    begin
+      if block_given?
+        yield self
+      end
+      @stream.write "</sheetData>"
+      if @merged_cells
+        src = @merged_cells_file
+        @stream.write "<mergeCells count='#{@merged_cells.count}'>"
+        copy_stream(src, @stream)
+        @stream.write "</mergeCells>"
+      end 
+      @stream.write "</worksheet>"
+    ensure
+      @merged_cells_file.unlink if @merged_cells_file
     end
-    @stream.write "</sheetData></worksheet>"
+  end
+
+  def merge_cells x1, y1, x2, y2
+    @merged_cells ||= begin
+      @merged_cells_file = Tempfile.new('xlsx-merged-cells')
+      MergedCells.new @merged_cells_file
+    end
+    @merged_cells.merge_cells x1, y1, x2, y2
   end
 
   def add_row arry
