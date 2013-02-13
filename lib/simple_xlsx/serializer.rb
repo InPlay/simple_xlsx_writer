@@ -1,8 +1,6 @@
 module SimpleXlsx
 
 class Serializer
-  include CopyStream
-
   def initialize to
     @to = to
     Zip::ZipFile.open(to, Zip::ZipFile::CREATE) do |zip|
@@ -13,7 +11,11 @@ class Serializer
       add_styles
       @doc = Document.new(self)
       yield @doc
-      add_shared_strings if @doc.has_shared_strings?
+      if @doc.has_shared_strings?
+        add_shared_strings
+        @doc.relationships.add_relationship Relationships::TYPE_SHARED_STRINGS, 
+          Relationships::TARGET_SHARED_STRINGS
+      end
       add_workbook_relationship_part
       add_content_types
       add_workbook_part
@@ -47,6 +49,17 @@ ends
     end
   end
 
+  def open_stream_for_sheet_rels ndx
+    if !@sheet_rels_created
+      @zip.mkdir "xl/worksheets/_rels/"
+      @sheet_rels_created = true
+    end
+
+    @zip.get_output_stream "xl/worksheets/_rels/sheet#{ndx + 1}.xml.rels" do |f|
+      yield f
+    end
+  end
+
   def add_content_types
     @zip.get_output_stream "[Content_Types].xml" do |f|
       f.puts '<?xml version="1.0" encoding="UTF-8"?>'
@@ -72,21 +85,18 @@ ends
   def add_workbook_relationship_part
     @zip.mkdir "xl/_rels"
     @zip.get_output_stream "xl/_rels/workbook.xml.rels" do |f|
-      f.puts <<-ends
+      src = @doc.relationships_file
+      Serializer.write_relationships src, f
+    end
+  end
+
+  def self.write_relationships src, f
+    f.puts <<-ends
 <?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 ends
-      cnt = 0
-      f.puts "<Relationship Id=\"rId#{cnt += 1}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>"
-      @doc.sheets.each_with_index do |sheet, ndx|
-        sheet.rid = "rId#{cnt += 1}"
-        f.puts "<Relationship Id=\"#{sheet.rid}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet#{ndx + 1}.xml\"/>"
-      end
-      if @doc.has_shared_strings?
-        f.puts "<Relationship Id=\"rId#{cnt += 1}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>"
-      end
-      f.puts "</Relationships>"
-    end
+    Stream.copy(src, f)
+    f.puts "</Relationships>"
   end
 
   def add_relationship_part
@@ -201,7 +211,7 @@ ends
 ends
 
       src = @doc.shared_strings_file
-      copy_stream(src, f)
+      Stream.copy(src, f)
       f.puts '</sst>' 
     end
   end

@@ -4,11 +4,10 @@ require 'time'
 module SimpleXlsx
 
 class Sheet
-  include CopyStream
   attr_reader :name
   attr_accessor :rid
 
-  attr_reader :merged_cells
+  attr_reader :merged_cells, :relationships, :relationships_file
 
   def initialize document, name, stream, &block
     @document = document
@@ -25,15 +24,26 @@ ends
         yield self
       end
       @stream.write "</sheetData>"
+
       if @merged_cells
         src = @merged_cells_file
         @stream.write "<mergeCells count='#{@merged_cells.count}'>"
-        copy_stream(src, @stream)
+        Stream.copy(src, @stream)
         @stream.write "</mergeCells>"
       end 
+
+      if @hyperlinks
+        src = @hyperlinks_file
+        @stream.write "<hyperlinks>"
+        Stream.copy(src, @stream)
+        @stream.write "</hyperlinks>"
+      end
+
       @stream.write "</worksheet>"
     ensure
       @merged_cells_file.unlink if @merged_cells_file
+      @hyperlinks_file.unlink if @hyperlinks_file
+      @relationships_file.unlink if @relationships_file 
     end
   end
 
@@ -43,6 +53,22 @@ ends
       MergedCells.new @merged_cells_file
     end
     @merged_cells.merge_cells x1, y1, x2, y2
+  end
+
+  def add_relationship type, target
+    @relationships ||= begin
+      @relationships_file = Tempfile.new('xlsx-sheet-rels')
+      Relationships.new @relationships_file
+    end
+    @relationships.add_relationship type, target
+  end
+
+  def add_hyperlink x, y, target
+    @hyperlinks ||= begin
+      @hyperlinks_file = Tempfile.new('xlsx-hyperlinks')
+      Hyperlinks.new @hyperlinks_file, self
+    end
+    @hyperlinks.add_hyperlink x, y, target
   end
 
   def add_row arry
