@@ -16,9 +16,15 @@ module SimpleXlsx
       digest = Digest::MD5.digest(target)
 
       id = @ids[digest] ||
-        (@ids[digest] = @sheet.add_relationship Relationships::TYPE_HYPERLINK, target)
+        (@ids[digest] = @sheet.add_relationship Relationships::TYPE_HYPERLINK, target, {:TargetMode=>:External})
 
       @io.write "<hyperlink ref='#{Sheet.column_index x}#{y+1}' r:id='#{id.to_xs}'/>"
+    end
+
+    def to_stream stream
+      stream.write "<hyperlinks>"
+      Stream.copy(@io, stream)
+      stream.write "</hyperlinks>"
     end
 
   end

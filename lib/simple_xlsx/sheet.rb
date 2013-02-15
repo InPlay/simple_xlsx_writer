@@ -7,12 +7,16 @@ class Sheet
   attr_reader :name
   attr_accessor :rid
 
-  attr_reader :merged_cells, :relationships, :relationships_file
+  attr_reader :merged_cells
 
-  def initialize document, name, stream, &block
-    @document = document
-    @stream =  stream
-    @name = name
+  def initialize opts, &block
+    [:index, :io, :document, :stream, :name].each {|sym|
+      self.instance_variable_set "@#{sym.to_s}".to_sym, opts.fetch(sym)
+    }
+
+    @document.content_types.add_content_type "/xl/worksheets/sheet#{@index + 1}.xml", ContentTypes::CONTENT_TYPE_SHEET
+    self.rid = @document.relationships.add_relationship Relationships::TYPE_WORKSHEET, "worksheets/sheet#{@index + 1}.xml"
+  
     @row_ndx = 1
     @stream.write <<-ends
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -25,25 +29,15 @@ ends
       end
       @stream.write "</sheetData>"
 
-      if @merged_cells
-        src = @merged_cells_file
-        @stream.write "<mergeCells count='#{@merged_cells.count}'>"
-        Stream.copy(src, @stream)
-        @stream.write "</mergeCells>"
-      end 
-
-      if @hyperlinks
-        src = @hyperlinks_file
-        @stream.write "<hyperlinks>"
-        Stream.copy(src, @stream)
-        @stream.write "</hyperlinks>"
-      end
+      @merged_cells.to_stream @stream if @merged_cells
+      @hyperlinks.to_stream @stream if @hyperlinks
 
       @stream.write "</worksheet>"
     ensure
       @merged_cells_file.unlink if @merged_cells_file
       @hyperlinks_file.unlink if @hyperlinks_file
-      @relationships_file.unlink if @relationships_file 
+      @relationships.close if @relationships
+      @relationships_file.close if @relationships_file
     end
   end
 
@@ -55,12 +49,13 @@ ends
     @merged_cells.merge_cells x1, y1, x2, y2
   end
 
-  def add_relationship type, target
+  def add_relationship type, target, attrs  ={}
     @relationships ||= begin
-      @relationships_file = Tempfile.new('xlsx-sheet-rels')
+      @document.content_types.add_content_type "/xl/worksheets/_rels/sheet#{@index + 1}.xml.rels", ContentTypes::CONTENT_TYPE_RELATIONSHIPS
+      @relationships_file = @io.open_stream_for_sheet_rels @index
       Relationships.new @relationships_file
     end
-    @relationships.add_relationship type, target
+    @relationships.add_relationship type, target, attrs
   end
 
   def add_hyperlink x, y, target

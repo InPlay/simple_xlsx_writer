@@ -4,22 +4,30 @@ class Serializer
   def initialize to
     @to = to
     Zip::ZipFile.open(to, Zip::ZipFile::CREATE) do |zip|
+
       @zip = zip
-      add_doc_props
-      add_worksheets_directory
-      add_relationship_part
-      add_styles
-      @doc = Document.new(self)
-      yield @doc
-      if @doc.has_shared_strings?
-        add_shared_strings
-        @doc.relationships.add_relationship Relationships::TYPE_SHARED_STRINGS, 
-          Relationships::TARGET_SHARED_STRINGS
+
+      @zip.mkdir "xl/_rels"
+      @zip.get_output_stream "xl/_rels/workbook.xml.rels" do |relationships_file|
+      @zip.get_output_stream "[Content_Types].xml" do |content_types_file|
+        @content_types = ContentTypes.new content_types_file
+        @relationships = Relationships.new relationships_file
+
+        add_content_types
+
+        add_doc_props
+        add_worksheets_directory
+        add_relationship_part
+        add_styles
+        @doc = Document.new self, @content_types, @relationships
+        yield @doc
+
+        add_shared_strings if @doc.has_shared_strings?
+
+        add_workbook_part
+        @doc.close
       end
-      add_workbook_relationship_part
-      add_content_types
-      add_workbook_part
-      @doc.close
+      end
     end
   end
 
@@ -55,48 +63,16 @@ ends
       @sheet_rels_created = true
     end
 
-    @zip.get_output_stream "xl/worksheets/_rels/sheet#{ndx + 1}.xml.rels" do |f|
-      yield f
-    end
+    @zip.get_output_stream "xl/worksheets/_rels/sheet#{ndx + 1}.xml.rels"
   end
 
   def add_content_types
-    @zip.get_output_stream "[Content_Types].xml" do |f|
-      f.puts '<?xml version="1.0" encoding="UTF-8"?>'
-      f.puts '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-      f.puts <<-ends
-  <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-ends
-      if @doc.has_shared_strings?
-        f.puts '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
-      end
-      @doc.sheets.each_with_index do |sheet, ndx|
-        f.puts "<Override PartName=\"/xl/worksheets/sheet#{ndx+1}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
-      end
-      f.puts '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-      f.puts "</Types>"
-    end
-  end
-
-  def add_workbook_relationship_part
-    @zip.mkdir "xl/_rels"
-    @zip.get_output_stream "xl/_rels/workbook.xml.rels" do |f|
-      src = @doc.relationships_file
-      Serializer.write_relationships src, f
-    end
-  end
-
-  def self.write_relationships src, f
-    f.puts <<-ends
-<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-ends
-    Stream.copy(src, f)
-    f.puts "</Relationships>"
+    @content_types.add_content_type '/_rels/.rels', ContentTypes::CONTENT_TYPE_RELATIONSHIPS
+    @content_types.add_content_type '/docProps/core.xml', ContentTypes::CONTENT_TYPE_CORE_PROPERTIES
+    @content_types.add_content_type '/docProps/app.xml', ContentTypes::CONTENT_TYPE_EXT_PROPERTIES
+    @content_types.add_content_type '/xl/workbook.xml', ContentTypes::CONTENT_TYPE_WORKBOOK
+    @content_types.add_content_type '/xl/_rels/workbook.xml.rels', ContentTypes::CONTENT_TYPE_RELATIONSHIPS
+    @content_types.add_content_type '/xl/styles.xml', ContentTypes::CONTENT_TYPE_STYLES
   end
 
   def add_relationship_part
@@ -205,14 +181,7 @@ ends
 
   def add_shared_strings
     @zip.get_output_stream "xl/sharedStrings.xml" do |f|
-      f.puts <<-ends
-<?xml version="1.0" encoding="UTF-8"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{@doc.shared_strings.count}" uniqueCount="#{@doc.shared_strings.unique_count}">
-ends
-
-      src = @doc.shared_strings_file
-      Stream.copy(src, f)
-      f.puts '</sst>' 
+      @doc.shared_strings.to_stream f
     end
   end
 

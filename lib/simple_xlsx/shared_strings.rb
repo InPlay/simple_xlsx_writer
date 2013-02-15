@@ -37,6 +37,15 @@ module SimpleXlsx
       @index
     end
 
+    def to_stream stream
+      stream.puts <<-ends
+<?xml version="1.0" encoding="UTF-8"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{count}" uniqueCount="#{unique_count}">
+ends
+      Stream.copy(@io, stream)
+      stream.puts '</sst>' 
+    end
+
   end
 end
 
