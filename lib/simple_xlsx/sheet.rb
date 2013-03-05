@@ -10,7 +10,7 @@ class Sheet
   attr_reader :merged_cells
 
   def initialize opts, &block
-    [:index, :io, :document, :stream, :name].each {|sym|
+    [:styles, :index, :io, :document, :stream, :name].each {|sym|
       self.instance_variable_set "@#{sym.to_s}".to_sym, opts.fetch(sym)
     }
 
@@ -66,10 +66,19 @@ ends
     @hyperlinks.add_hyperlink x, y, target
   end
 
-  def add_row arry
+  def add_row arry, defaults = {}
     row = ["<row r=\"#{@row_ndx}\">"]
-    arry.each_with_index do |value, col_ndx|
-      kind, ccontent, cstyle = format_field_and_type_and_style value
+    arry.each_with_index do |v, col_ndx|
+      value = Sheet.deep_merge(defaults, (Sheet.value_to_hash v))
+
+      kind, ccontent, cstyle_base = format_field_and_type_and_style value[:value]
+
+      final_value = (Sheet.deep_merge({:style=>cstyle_base}, value))
+      cstyle = (@styles << final_value[:style])
+
+      link = final_value[:link]
+      add_hyperlink col_ndx, @row_ndx-1, link if link
+
       row << "<c r=\"#{Sheet.column_index(col_ndx)}#{@row_ndx}\" t=\"#{kind.to_s}\" s=\"#{cstyle}\">#{ccontent}</c>"
     end
     row << "</row>"
@@ -80,24 +89,24 @@ ends
   def format_field_and_type_and_style value
     if value.is_a?(String)
       if @document.has_shared_strings?
-        [:s, "<v>#{(@document.shared_strings << value)}</v>", 5] 
+        [:s, "<v>#{(@document.shared_strings << value)}</v>", :num_fmt => Styles::NumFmts::AT] 
       else
-        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", 5]
+        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", :num_fmt => Styles::NumFmts::AT]
       end
     elsif value.is_a?(BigDecimal)
-      [:n, "<v>#{value.to_s('f')}</v>", 4]
+      [:n, "<v>#{value.to_s('f')}</v>", :num_fmt => Styles::NumFmts::NUM0_00]
     elsif value.is_a?(Float)
-      [:n, "<v>#{value.to_s}</v>", 4]
+      [:n, "<v>#{value.to_s}</v>", :num_fmt => Styles::NumFmts::NUM0_00]
     elsif value.is_a?(Numeric)
-      [:n, "<v>#{value.to_s}</v>", 3]
+      [:n, "<v>#{value.to_s}</v>", :num_fmt => Styles::NumFmts::NUM0]
     elsif value.is_a?(Date)
-      [:n, "<v>#{Sheet.days_since_jan_1_1900(value)}</v>", 2]
+      [:n, "<v>#{Sheet.days_since_jan_1_1900(value)}</v>", :num_fmt => Styles::NumFmts::DATE]
     elsif value.is_a?(Time)
-      [:n, "<v>#{Sheet.fractional_days_since_jan_1_1900(value)}</v>", 1]
+      [:n, "<v>#{Sheet.fractional_days_since_jan_1_1900(value)}</v>", :num_fmt => Styles::NumFmts::TIME]
     elsif value.is_a?(TrueClass) || value.is_a?(FalseClass)
-      [:b, "<v>#{value ? '1' : '0'}</v>", 6]
+      [:b, "<v>#{value ? '1' : '0'}</v>", :num_fmt => Styles::NumFmts::BOOLEAN]
     else
-      [:inlineStr, "<is><t>#{value.to_s.to_xs}</t></is>", 5]
+      [:inlineStr, "<is><t>#{value.to_s.to_xs}</t></is>", :num_fmt => Styles::NumFmts::AT]
     end
   end
 
@@ -124,6 +133,19 @@ ends
     end
     result << abc[result.empty? ? n : n - 1]
     result.reverse.join
+  end
+
+  def self.value_to_hash v
+    return v if v && v.is_a?(Hash)
+    {:value=>v}
+  end
+
+  def self.deep_merge o1, o2
+    o1.merge(o2) do |key, oldval, newval|
+      oldval = oldval.to_hash if oldval.respond_to?(:to_hash)
+      newval = newval.to_hash if newval.respond_to?(:to_hash)
+      oldval.class.to_s == 'Hash' && newval.class.to_s == 'Hash' ? deep_merge(oldval, newval) : newval
+    end
   end
 
 end

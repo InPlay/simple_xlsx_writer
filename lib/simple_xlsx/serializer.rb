@@ -12,16 +12,17 @@ class Serializer
       @zip.get_output_stream "[Content_Types].xml" do |content_types_file|
         @content_types = ContentTypes.new content_types_file
         @relationships = Relationships.new relationships_file
+        @styles = Styles.new
 
         add_content_types
 
         add_doc_props
         add_worksheets_directory
         add_relationship_part
-        add_styles
-        @doc = Document.new self, @content_types, @relationships
+        @doc = Document.new self, @content_types, @relationships, @styles
         yield @doc
 
+        add_styles
         add_shared_strings if @doc.has_shared_strings?
 
         add_workbook_part
@@ -108,70 +109,7 @@ ends
 
   def add_styles
     @zip.get_output_stream "xl/styles.xml" do |f|
-      f.puts <<-ends
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="7">
-  <numFmt formatCode="GENERAL" numFmtId="164"/>
-  <numFmt formatCode="&quot;TRUE&quot;;&quot;TRUE&quot;;&quot;FALSE&quot;" numFmtId="170"/>
-</numFmts>
-<fonts count="5">
-  <font><name val="Mangal"/><family val="2"/><sz val="10"/></font>
-  <font><name val="Arial"/><family val="0"/><sz val="10"/></font>
-  <font><name val="Arial"/><family val="0"/><sz val="10"/></font>
-  <font><name val="Arial"/><family val="0"/><sz val="10"/></font>
-  <font><name val="Arial"/><family val="2"/><sz val="10"/></font>
-</fonts>
-<fills count="2">
-  <fill><patternFill patternType="none"/></fill>
-  <fill><patternFill patternType="gray125"/></fill>
-</fills>
-<borders count="1">
-  <border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border>
-</borders>
-<cellStyleXfs count="20">
-  <xf applyAlignment="true" applyBorder="true" applyFont="true" applyProtection="true" borderId="0" fillId="0" fontId="0" numFmtId="164">
-    <alignment horizontal="general" indent="0" shrinkToFit="false" textRotation="0" vertical="bottom" wrapText="false"/>
-    <protection hidden="false" locked="true"/>
-  </xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="2" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="2" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="43"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="41"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="44"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="42"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="9"></xf>
-  </cellStyleXfs>
-<cellXfs count="7">
-  <xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="164" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="22" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="15" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="1" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="2" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="49" xfId="0"></xf>
-  <xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="4" numFmtId="170" xfId="0"></xf>
-</cellXfs>
-<cellStyles count="6"><cellStyle builtinId="0" customBuiltin="false" name="Normal" xfId="0"/>
-  <cellStyle builtinId="3" customBuiltin="false" name="Comma" xfId="15"/>
-  <cellStyle builtinId="6" customBuiltin="false" name="Comma [0]" xfId="16"/>
-  <cellStyle builtinId="4" customBuiltin="false" name="Currency" xfId="17"/>
-  <cellStyle builtinId="7" customBuiltin="false" name="Currency [0]" xfId="18"/>
-  <cellStyle builtinId="5" customBuiltin="false" name="Percent" xfId="19"/>
-</cellStyles>
-</styleSheet>
-ends
+      @styles.to_stream f
     end
   end
 

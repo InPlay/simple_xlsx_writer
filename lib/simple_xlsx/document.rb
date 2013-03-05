@@ -1,8 +1,8 @@
 module SimpleXlsx
   class Document
-    attr_accessor :use_shared_strings, :content_types, :relationships
+    attr_accessor :use_shared_strings, :content_types, :relationships, :styles
 
-    def initialize(io, content_types, relationships)
+    def initialize(io, content_types, relationships, styles)
       @sheets = []
       @io = io
       @use_shared_strings = false
@@ -11,6 +11,8 @@ module SimpleXlsx
 
       @relationships = relationships
       @relationships.add_relationship Relationships::TYPE_STYLES, Relationships::TARGET_STYLES
+
+      @styles = styles
     end
 
     attr_reader :sheets
@@ -23,6 +25,7 @@ module SimpleXlsx
                               :name=>name, 
                               :stream=>stream,
                               :index=>idx,
+                              :styles=>styles,
                               &block)
       end
     end
