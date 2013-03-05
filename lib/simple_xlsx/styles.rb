@@ -29,11 +29,14 @@ module SimpleXlsx
       fill = find_fill style
       border = find_border style
 
+      alignment = style[:alignment]
+
       to_find = {:font_id=>font, :fill_id=>fill, :border_id=>border, :num_fmt_id=>num_fmt,
-                      :apply_alignment=>false,
+                      :apply_alignment=> !!alignment,
                       :apply_border=>true,
                       :apply_font=>true,
                       :apply_protection=>false, :xf_id=>0 }
+      to_find.merge! :alignment=>alignment if alignment
       (@cell_xfs << to_find)
     end
     alias :<< :add_style
@@ -90,6 +93,11 @@ eos
 
       @borders << {}
       @borders << Borders::BLACK
+
+      @cell_xfs << {:font_id=>0, :fill_id=>0, :border_id=>0, :num_fmt_id=>NumFmts::NUM0,
+                      :apply_border=>true,
+                      :apply_font=>true,
+                      :apply_protection=>false, :xf_id=>0 }
 
       @cell_style_xfs << {:border_id=>0, :num_fmt_id=>0, 
                           :font_id=>0, :fill_id=>0, :xf_id=>0}

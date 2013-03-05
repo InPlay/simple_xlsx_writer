@@ -17,7 +17,7 @@ module SimpleXlsx
 
     attr_reader :sheets
 
-    def add_sheet name, &block
+    def add_sheet name, columns = [], &block
       idx = @sheets.size
       @io.open_stream_for_sheet(idx) do |stream|
         @sheets << Sheet.new(:io=>@io, 
@@ -26,6 +26,7 @@ module SimpleXlsx
                               :stream=>stream,
                               :index=>idx,
                               :styles=>styles,
+                              :columns=>columns,
                               &block)
       end
     end

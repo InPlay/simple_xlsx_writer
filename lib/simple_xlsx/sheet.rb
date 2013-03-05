@@ -10,7 +10,7 @@ class Sheet
   attr_reader :merged_cells
 
   def initialize opts, &block
-    [:styles, :index, :io, :document, :stream, :name].each {|sym|
+    [:styles, :index, :io, :document, :stream, :name, :columns].each {|sym|
       self.instance_variable_set "@#{sym.to_s}".to_sym, opts.fetch(sym)
     }
 
@@ -21,8 +21,29 @@ class Sheet
     @stream.write <<-ends
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<sheetData>
 ends
+
+    unless @columns.empty?
+      @stream.write "<cols>"
+      @columns.each {|c|
+        attrs = {
+          :style => 0,
+        }.merge({
+          :min=>c[:min],
+          :max=>c[:max],
+          :collapsed=>!!c[:collapsed],
+          :hidden=>!!c[:hidden],
+          :bestFit=>!!c[:best_fit],
+          :width=> (c[:width] || 9),
+          :customWidth=>!!c[:custom_width]
+        })
+        @stream.write "<col #{attrs.map{|k,v| "#{k.to_s.to_xs}=\"#{v.to_s.to_xs}\""}.compact.join ' '}/>"
+      }
+      @stream.write "</cols>"
+    end
+
+    @stream.write "<sheetData>"
+
     begin
       if block_given?
         yield self
