@@ -5,7 +5,13 @@ module SimpleXlsx
       def to_stream stream
         stream.puts "<cellStyles count=\"#{length}\">"
         content.each{|(c,id)| 
-          stream.puts "<cellStyle builtinId=\"#{c[:builtin_id].to_s.to_xs}\" customBuiltin=\"#{c[:custom_builtin].to_s.to_xs}\" name=\"#{c[:name].to_xs}\" xfId=\"#{c[:xf_id].to_s.to_xs}\"/>"
+          attrs = {:builtinId => c[:builtin_id],
+            :customBuiltin => c[:custom_builtin],
+            :name => c[:name],
+            :xfId => c[:xf_id]
+          }
+      
+          stream.puts "<cellStyle #{serialize_attrs attrs}/>"
         }
         stream.puts "</cellStyles>"
       end

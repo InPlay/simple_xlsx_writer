@@ -1,6 +1,7 @@
 module SimpleXlsx
   class Styles
     class Base
+      include AttrsSerializer
 
       def initialize
         @content = {}

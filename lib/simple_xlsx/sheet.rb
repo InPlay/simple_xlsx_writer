@@ -4,6 +4,8 @@ require 'time'
 module SimpleXlsx
 
 class Sheet
+  include AttrsSerializer
+
   attr_reader :name
   attr_accessor :rid
 
@@ -37,7 +39,7 @@ ends
           :width=> (c[:width] || 9),
           :customWidth=>!!c[:custom_width]
         })
-        @stream.write "<col #{attrs.map{|k,v| "#{k.to_s.to_xs}=\"#{v.to_s.to_xs}\""}.compact.join ' '}/>"
+        @stream.write "<col #{serialize_attrs attrs}/>"
       }
       @stream.write "</cols>"
     end

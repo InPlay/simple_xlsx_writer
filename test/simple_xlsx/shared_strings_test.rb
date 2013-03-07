@@ -9,7 +9,10 @@ class SharedStringsTest < Test::Unit::TestCase
   def test_add_string
     str = ''
     io = StringIO.new str
-    doc = Document.new io
+    @content_types = ContentTypes.new(StringIO.new "")
+    @relationships = Relationships.new(StringIO.new "")
+    @styles = Styles.new()
+    doc = Document.new io, @content_types, @relationships, @styles
 
     ss = SharedStrings.new(io)
 

@@ -29,67 +29,89 @@ class SheetTest < Test::Unit::TestCase
   def empty_sheet use_shared_strings = false 
     sheet_str = ""
     doc_str = ""
-    io = StringIO.new sheet_str
+    stream = StringIO.new sheet_str
     doc_io = StringIO.new doc_str
 
-    doc = Document.new io
+    content_types = ContentTypes.new(StringIO.new "")
+    relationships = Relationships.new(StringIO.new "")
+    styles = Styles.new()
+
+    doc = Document.new io, content_types, relationships, styles
     doc.use_shared_strings = true if use_shared_strings
-    Sheet.new(doc, 'name', io)
+    Sheet.new( :styles => styles, 
+      :index=>1,
+      :io => nil,
+      :document=> doc, 
+      :stream => stream, 
+      :name => 'name',
+      :columns => []
+    )
   end
 
   def test_format_field_for_strings
     v = empty_sheet.format_field_and_type_and_style "<escape this>"
-    assert_equal [:inlineStr, "<is><t>&lt;escape this&gt;</t></is>", 5], v
+    assert_equal [:inlineStr, "<is><t>&lt;escape this&gt;</t></is>", {:num_fmt=>49}], v
   end
 
   def test_format_field_for_shared_strings
     sheet = empty_sheet true
 
     v = sheet.format_field_and_type_and_style "frequent string"
-    assert_equal [:s, "<v>0</v>", 5], v
+    assert_equal [:s, "<v>0</v>", {:num_fmt=>49}], v
 
     v = sheet.format_field_and_type_and_style "rare"
-    assert_equal [:s, "<v>1</v>", 5], v
+    assert_equal [:s, "<v>1</v>", {:num_fmt=>49}], v
 
     v = sheet.format_field_and_type_and_style "frequent string"
-    assert_equal [:s, "<v>0</v>", 5], v
+    assert_equal [:s, "<v>0</v>", {:num_fmt=>49}], v
   end
 
   def test_format_field_for_numbers
     v = empty_sheet.format_field_and_type_and_style 3
-    assert_equal [:n, "<v>3</v>", 3], v
+    assert_equal [:n, "<v>3</v>", {:num_fmt=>1}], v
     v = empty_sheet.format_field_and_type_and_style(BigDecimal.new("45"))
-    assert_equal [:n, "<v>45.0</v>", 4], v
+    assert_equal [:n, "<v>45.0</v>", {:num_fmt=>2}], v
     v = empty_sheet.format_field_and_type_and_style(9.32)
-    assert_equal [:n, "<v>9.32</v>", 4], v
+    assert_equal [:n, "<v>9.32</v>", {:num_fmt=>2}], v
   end
 
   def test_format_field_for_date
     v = empty_sheet.format_field_and_type_and_style(Date.parse('2010-Jul-24'))
-    assert_equal [:n, "<v>#{38921+1462}</v>", 2], v
+    assert_equal [:n, "<v>#{38921+1462}</v>", {:num_fmt=>15}], v
   end
 
   def test_format_field_for_datetime
     v = empty_sheet.format_field_and_type_and_style(Time.parse('2010-Jul-24 12:00 UTC'))
-    assert_equal [:n, "<v>#{38921.5+1462}</v>", 1], v
+    assert_equal [:n, "<v>#{38921.5+1462}</v>", {:num_fmt=>22}], v
   end
 
 
   def test_format_field_for_boolean
     v = empty_sheet.format_field_and_type_and_style(false)
-    assert_equal [:b, "<v>0</v>", 6], v
+    assert_equal [:b, "<v>0</v>", {:num_fmt=>101}], v
     v = empty_sheet.format_field_and_type_and_style(true)
-    assert_equal [:b, "<v>1</v>", 6], v
+    assert_equal [:b, "<v>1</v>", {:num_fmt=>101}], v
   end
 
   def test_add_row
     str = ""
-    io = StringIO.new(str)
+    stream = StringIO.new(str)
     doc_str = ""
     doc_io = StringIO.new doc_str
-    sheet_doc = Document.new io
+    content_types = ContentTypes.new(StringIO.new "")
+    relationships = Relationships.new(StringIO.new "")
+    styles = Styles.new()
+    sheet_doc = Document.new io, content_types, relationships, styles
 
-    Sheet.new(sheet_doc, 'name', io) do |sheet|
+    Sheet.new({
+      :styles => styles, 
+      :index=>1,
+      :io => io,
+      :document=>sheet_doc, 
+      :stream => stream, 
+      :name => 'new sheet', 
+      :columns => []
+    }) do |sheet|
       sheet.add_row ['this is ', 'a new row']
     end
     doc = REXML::Document.new str
