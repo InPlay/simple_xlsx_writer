@@ -112,24 +112,24 @@ ends
   def format_field_and_type_and_style value
     if value.is_a?(String)
       if @document.has_shared_strings?
-        [:s, "<v>#{(@document.shared_strings << value)}</v>", :num_fmt => Styles::NumFmts::AT] 
+        [:s, "<v>#{(@document.shared_strings << value)}</v>", {:num_fmt => Styles::NumFmts::AT}] 
       else
-        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", :num_fmt => Styles::NumFmts::AT]
+        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", {:num_fmt => Styles::NumFmts::AT}]
       end
     elsif value.is_a?(BigDecimal)
-      [:n, "<v>#{value.to_s('f')}</v>", :num_fmt => Styles::NumFmts::NUM0_00]
+      [:n, "<v>#{value.to_s('f')}</v>", {:num_fmt => Styles::NumFmts::NUM0_00}]
     elsif value.is_a?(Float)
-      [:n, "<v>#{value.to_s}</v>", :num_fmt => Styles::NumFmts::NUM0_00]
+      [:n, "<v>#{value.to_s}</v>", {:num_fmt => Styles::NumFmts::NUM0_00}]
     elsif value.is_a?(Numeric)
-      [:n, "<v>#{value.to_s}</v>", :num_fmt => Styles::NumFmts::NUM0]
+      [:n, "<v>#{value.to_s}</v>", {:num_fmt => Styles::NumFmts::NUM0}]
     elsif value.is_a?(Date)
-      [:n, "<v>#{Sheet.days_since_jan_1_1900(value)}</v>", :num_fmt => Styles::NumFmts::DATE]
+      [:n, "<v>#{Sheet.days_since_jan_1_1900(value)}</v>", {:num_fmt => Styles::NumFmts::DATE}]
     elsif value.is_a?(Time)
-      [:n, "<v>#{Sheet.fractional_days_since_jan_1_1900(value)}</v>", :num_fmt => Styles::NumFmts::TIME]
+      [:n, "<v>#{Sheet.fractional_days_since_jan_1_1900(value)}</v>", {:num_fmt => Styles::NumFmts::TIME}]
     elsif value.is_a?(TrueClass) || value.is_a?(FalseClass)
-      [:b, "<v>#{value ? '1' : '0'}</v>", :num_fmt => Styles::NumFmts::BOOLEAN]
+      [:b, "<v>#{value ? '1' : '0'}</v>", {:num_fmt => Styles::NumFmts::BOOLEAN}]
     else
-      [:inlineStr, "<is><t>#{value.to_s.to_xs}</t></is>", :num_fmt => Styles::NumFmts::AT]
+      [:inlineStr, "<is><t>#{value.to_s.to_xs}</t></is>", {:num_fmt => Styles::NumFmts::AT}]
     end
   end
 

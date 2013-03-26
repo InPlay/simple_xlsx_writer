@@ -36,7 +36,7 @@ class SheetTest < Test::Unit::TestCase
     relationships = Relationships.new(StringIO.new "")
     styles = Styles.new()
 
-    doc = Document.new io, content_types, relationships, styles
+    doc = Document.new doc_io, content_types, relationships, styles
     doc.use_shared_strings = true if use_shared_strings
     Sheet.new( :styles => styles, 
       :index=>1,
@@ -101,12 +101,12 @@ class SheetTest < Test::Unit::TestCase
     content_types = ContentTypes.new(StringIO.new "")
     relationships = Relationships.new(StringIO.new "")
     styles = Styles.new()
-    sheet_doc = Document.new io, content_types, relationships, styles
+    sheet_doc = Document.new doc_io, content_types, relationships, styles
 
     Sheet.new({
       :styles => styles, 
       :index=>1,
-      :io => io,
+      :io => nil,
       :document=>sheet_doc, 
       :stream => stream, 
       :name => 'new sheet', 
