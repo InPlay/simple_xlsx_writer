@@ -31,7 +31,7 @@ module SimpleXlsx
       end
 
       def self.validate_color color
-        raise ArgumentError, "Invalid color value: \"#{v}\"." unless color.match(/[0-9A-Fa-f]{8}/)
+        raise ArgumentError, "Invalid color value: \"#{color}\"." unless color.match(/[0-9A-Fa-f]{8}/)
       end
 
       def self.format_color color
