@@ -15,14 +15,15 @@ module SimpleXlsx
     end
 
     def << str
+      s = str.to_s
       @count += 1
-      digest = Digest::MD5.digest(str)
+      digest = Digest::MD5.digest(s)
 
       @content[digest] || begin
         result = @index
 
         @content[digest] = @index
-        @io.puts "<si><t>#{str.to_xs}</t></si>"
+        @io.puts "<si><t>#{s.to_xs}</t></si>"
 
         @index = @index + 1
         result
