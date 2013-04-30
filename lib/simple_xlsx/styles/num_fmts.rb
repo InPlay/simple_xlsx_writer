@@ -5,6 +5,8 @@ module SimpleXlsx
       NUM0 = 1
       NUM0_00 = 2
 
+      CURRENCY = 5 # $#,##0_);($#,##0)
+
       DATE = 15
       TIME = 22
 
