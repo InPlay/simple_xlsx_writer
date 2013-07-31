@@ -162,7 +162,7 @@ ends
     if s.is_a?(String)
       s.to_xs
     else
-      value = s[:value] || ''
+      (s[:value] || '').to_xs
     end
   end
 
