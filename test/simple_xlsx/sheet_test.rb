@@ -53,6 +53,17 @@ class SheetTest < Test::Unit::TestCase
     assert_equal [:inlineStr, "<is><t>&lt;escape this&gt;</t></is>", {:num_fmt=>49}], v
   end
 
+  def test_format_field_for_rich_strings
+    v = empty_sheet.format_field_and_type_and_style [
+      'plain ',
+      {:value => 'bold ', :bold=>true},
+      {:value=>"italic", :italic=>true}
+    ]
+    assert_equal [:inlineStr, 
+      %Q{<is><r><t xml:space=\"preserve\">plain </t></r><r><rPr><rFont val=\"Arial\"/><family val=\"0\"/><b val=\"true\"/><i val=\"false\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">bold </t></r><r><rPr><rFont val=\"Arial\"/><family val=\"0\"/><b val=\"false\"/><i val=\"true\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">italic</t></r></is>},
+      {:num_fmt=>49}], v
+  end
+
   def test_format_field_for_shared_strings
     sheet = empty_sheet true
 

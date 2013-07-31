@@ -11,6 +11,10 @@ require 'simple_xlsx/styles/cell_styles'
 module SimpleXlsx
   class Styles
 
+    DEFAULT_FONT = 'Arial'
+    DEFAULT_FONT_FAMILY = 0
+    DEFAULT_FONT_SIZE = 10
+
     def initialize
       @num_fmts = NumFmts.new
       @fonts = Fonts.new
@@ -86,7 +90,7 @@ eos
       @num_fmts << {:id => NumFmts::YYYYMMDD, :format_code => "yyyy/mm/dd"}
       @num_fmts << {:id => NumFmts::YYYYMMDDHHMMSS, :format_code=> "yyyy/mm/dd hh:mm:ss"}
 
-      @fonts << {:name => 'Arial', :size => 10, :family => 0}
+      @fonts << {:name => DEFAULT_FONT, :size => DEFAULT_FONT_SIZE, :family => DEFAULT_FONT_FAMILY}
 
       @fills << {:pattern_fill => :none}
       @fills << {:pattern_fill => :gray125}

@@ -110,11 +110,11 @@ ends
   end
 
   def format_field_and_type_and_style value
-    if value.is_a?(String)
+    if value.is_a?(String) || value.is_a?(Array)
       if @document.has_shared_strings?
-        [:s, "<v>#{(@document.shared_strings << value)}</v>", {:num_fmt => Styles::NumFmts::AT}] 
+        [:s, "<v>#{(@document.shared_strings << Sheet.serialize_rich_string(value))}</v>", {:num_fmt => Styles::NumFmts::AT}] 
       else
-        [:inlineStr, "<is><t>#{value.to_xs}</t></is>", {:num_fmt => Styles::NumFmts::AT}]
+        [:inlineStr, "<is>#{Sheet.serialize_rich_string(value)}</is>", {:num_fmt => Styles::NumFmts::AT}]
       end
     elsif value.is_a?(BigDecimal)
       [:n, "<v>#{value.to_s('f')}</v>", {:num_fmt => Styles::NumFmts::NUM0_00}]
@@ -130,6 +130,39 @@ ends
       [:b, "<v>#{value ? '1' : '0'}</v>", {:num_fmt => Styles::NumFmts::BOOLEAN}]
     else
       [:inlineStr, "<is><t>#{value.to_s.to_xs}</t></is>", {:num_fmt => Styles::NumFmts::AT}]
+    end
+  end
+
+  def self.serialize_rich_string value
+    if value.is_a?(String)
+      "<t>#{value.to_xs}</t>"
+    else
+      value.map{|s| 
+        "<r>#{Sheet.inline_style s}<t xml:space=\"preserve\">#{self.inline_value s}</t></r>"
+      }.join
+    end  
+  end
+
+  def self.inline_style s
+    if s.is_a?(String)
+      ''
+    else
+      bold = !!s[:bold]
+      italic = !!s[:italic]
+
+      font = s[:font] || Styles::DEFAULT_FONT
+      font_family = s[:font_family] || Styles::DEFAULT_FONT_FAMILY
+      font_size = s[:font_size] || Styles::DEFAULT_FONT_SIZE
+
+      "<rPr><rFont val=\"#{font.to_xs}\"/><family val=\"#{font_family.to_s.to_xs}\"/><b val=\"#{bold.to_s.to_xs}\"/><i val=\"#{italic.to_s.to_xs}\"/><sz val=\"#{font_size.to_s.to_xs}\"/></rPr>"
+    end
+  end
+
+  def self.inline_value s
+    if s.is_a?(String)
+      s.to_xs
+    else
+      value = s[:value] || ''
     end
   end
 

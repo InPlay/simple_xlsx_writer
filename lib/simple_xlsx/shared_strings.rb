@@ -23,7 +23,7 @@ module SimpleXlsx
         result = @index
 
         @content[digest] = @index
-        @io.puts "<si><t>#{s.to_xs}</t></si>"
+        @io.puts "<si>#{s}</si>"
 
         @index = @index + 1
         result

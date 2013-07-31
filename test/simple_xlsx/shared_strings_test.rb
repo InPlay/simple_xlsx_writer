@@ -16,11 +16,11 @@ class SharedStringsTest < Test::Unit::TestCase
 
     ss = SharedStrings.new(io)
 
-    v = (ss << 'first test string')
+    v = (ss << '<t>first test string</t>')
     assert_equal v, 0
-    v = (ss << 'second test string')
+    v = (ss << '<t>second test string</t>')
     assert_equal v, 1
-    v = (ss << 'first test string')
+    v = (ss << '<t>first test string</t>')
     assert_equal v, 0
 
     # it's just the fragment
