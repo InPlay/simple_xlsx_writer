@@ -161,8 +161,10 @@ ends
   def self.inline_value s
     if s.is_a?(String)
       s.to_xs
+    elsif s.is_a?(Hash)
+      (s[:value] || '').to_s.to_xs
     else
-      (s[:value] || '').to_xs
+      s.to_s.to_xs
     end
   end
 
