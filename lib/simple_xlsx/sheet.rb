@@ -149,12 +149,18 @@ ends
     else
       bold = !!s[:bold]
       italic = !!s[:italic]
+      underline = !!( s[:underline] || s[:underlined] )
 
       font = s[:font] || Styles::DEFAULT_FONT
       font_family = s[:font_family] || Styles::DEFAULT_FONT_FAMILY
       font_size = s[:font_size] || Styles::DEFAULT_FONT_SIZE
 
-      "<rPr><rFont val=\"#{font.to_xs}\"/><family val=\"#{font_family.to_s.to_xs}\"/><b val=\"#{bold.to_s.to_xs}\"/><i val=\"#{italic.to_s.to_xs}\"/><sz val=\"#{font_size.to_s.to_xs}\"/></rPr>"
+      r = ["<rPr>"]
+      r << "<b/>" if bold
+      r << "<i/>" if italic
+      r << "<u/>" if underline
+      r << "<rFont val=\"#{font.to_xs}\"/><family val=\"#{font_family.to_s.to_xs}\"/><sz val=\"#{font_size.to_s.to_xs}\"/></rPr>"
+      r.join
     end
   end
 

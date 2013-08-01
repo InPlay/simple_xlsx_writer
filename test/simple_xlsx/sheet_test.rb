@@ -60,7 +60,7 @@ class SheetTest < Test::Unit::TestCase
       {:value=>"italic", :italic=>true}
     ]
     assert_equal [:inlineStr, 
-      %Q{<is><r><t xml:space=\"preserve\">plain </t></r><r><rPr><rFont val=\"Arial\"/><family val=\"0\"/><b val=\"true\"/><i val=\"false\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">bold </t></r><r><rPr><rFont val=\"Arial\"/><family val=\"0\"/><b val=\"false\"/><i val=\"true\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">italic</t></r></is>},
+      %Q{<is><r><t xml:space=\"preserve\">plain </t></r><r><rPr><b/><rFont val=\"Arial\"/><family val=\"0\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">bold </t></r><r><rPr><i/><rFont val=\"Arial\"/><family val=\"0\"/><sz val=\"10\"/></rPr><t xml:space=\"preserve\">italic</t></r></is>},
       {:num_fmt=>49}], v
   end
 
