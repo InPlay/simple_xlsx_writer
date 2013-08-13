@@ -42,7 +42,7 @@ class Serializer
 ends
       @doc.sheets.each_with_index do |sheet, ndx|
         # Excel fails to read sheet names longer than 31 character
-        f.puts "<sheet name=\"#{sheet.name.to_s[0..30]}\" sheetId=\"#{ndx + 1}\" r:id=\"#{sheet.rid}\"/>"
+        f.puts "<sheet name=\"#{sheet.name.to_s[0..30].to_xs}\" sheetId=\"#{ndx + 1}\" r:id=\"#{sheet.rid}\"/>"
       end
       f.puts "</sheets></workbook>"
     end
