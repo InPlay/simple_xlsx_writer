@@ -90,7 +90,7 @@ ends
   end
 
   def add_row arry, defaults = {}
-    row = ["<row r=\"#{@row_ndx}\">"]
+    row = [defaults[:height] ? "<row r=\"#{@row_ndx}\" ht=\"#{defaults[:height]}\" customHeight=\"1\">" : "<row r=\"#{@row_ndx}\">"]
     arry.each_with_index do |v, col_ndx|
       value = Sheet.deep_merge(defaults, (Sheet.value_to_hash v))
 
