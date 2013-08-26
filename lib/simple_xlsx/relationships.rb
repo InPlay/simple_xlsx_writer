@@ -24,7 +24,7 @@ ends
 
     def add_relationship type, target, attrs = {}
       id = "rId#{@count += 1}"
-      @io.write "<Relationship Id=\"#{id.to_xs}\" Type=\"#{type.to_xs}\" Target=\"#{target[0..255].to_xs}\""
+      @io.write "<Relationship Id=\"#{id.to_xs}\" Type=\"#{type.to_xs}\" Target=\"#{ExcelCompatibility::truncate_uri(target).to_xs}\""
       attrs.each{|k,v| @io.write " #{k.to_s}=\"#{v.to_s.to_xs}\""}
       @io.write "/>"
       id
@@ -36,5 +36,3 @@ ends
 
   end
 end
-
-
