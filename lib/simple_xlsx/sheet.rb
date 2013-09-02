@@ -159,7 +159,10 @@ ends
       r << "<b/>" if bold
       r << "<i/>" if italic
       r << "<u/>" if underline
-      r << "<rFont val=\"#{font.to_xs}\"/><family val=\"#{font_family.to_s.to_xs}\"/><sz val=\"#{font_size.to_s.to_xs}\"/></rPr>"
+      r << "<rFont val=\"#{font.to_xs}\"/><family val=\"#{font_family.to_s.to_xs}\"/><sz val=\"#{font_size.to_s.to_xs}\"/>"
+      r << "<color rgb=\"#{SimpleXlsx::Styles::Base.format_color s[:color]}\"/>" if s[:color] 
+      r << "</rPr>"
+
       r.join
     end
   end
