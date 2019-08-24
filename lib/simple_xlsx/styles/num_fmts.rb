@@ -24,14 +24,14 @@ module SimpleXlsx
       end
 
       def << o
-        if o.is_a? Fixnum
+        if o.is_a? Integer
           o
         elsif o.is_a? String
           add_num_fmt :format_code=>o
         elsif o.is_a? Hash
           add_num_fmt o
         else
-          raise "Invalid number format, expected String, Hash or Fixnum."
+          raise "Invalid number format, expected String, Hash or Integer."
         end
       end
 

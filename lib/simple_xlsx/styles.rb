@@ -62,7 +62,7 @@ eos
 
     def find_num_fmt style
       n = style[:num_fmt]
-      return (n || 0) if !n || n.is_a?(Fixnum)
+      return (n || 0) if !n || n.is_a?(Integer)
       @num_fmts << n
     end
 
